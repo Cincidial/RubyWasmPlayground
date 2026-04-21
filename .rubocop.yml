@@ -1,0 +1,8 @@
+Layout/LineLength:
+    Max: 255
+
+Layout/IndentationWidth:
+    Width: 4
+
+Layout/EmptyLinesAroundBlockBody:
+    EnforcedStyle: no_empty_lines
