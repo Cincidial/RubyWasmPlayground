@@ -1,7 +1,7 @@
 var build_data
 async function getBuildData() {
     try {
-        const response = await fetch('/assets/atlas_metadata.json')
+        const response = await fetch('atlas_metadata.json')
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`)
         }
@@ -13,7 +13,7 @@ async function getBuildData() {
             const y = -v['y']
             const width = v['width']
             const height = v['height']
-            elem.style.cssText = `width: ${width}px; height: ${height}px; background-image: url('assets/sprite_atlas.png'); background-repeat: no-repeat; background-position: ${x}px ${y}px; overflow: hidden`
+            elem.style.cssText = `width: ${width}px; height: ${height}px; background-image: url('sprite_atlas.png'); background-repeat: no-repeat; background-position: ${x}px ${y}px; overflow: hidden`
             document.body.appendChild(elem)
         })
         Object.entries(build_data['front']).forEach(([k, v]) => {
@@ -22,7 +22,7 @@ async function getBuildData() {
             const y = -v['y']
             const width = v['width']
             const height = v['height']
-            elem.style.cssText = `width: ${width}px; height: ${height}px; background-image: url('assets/sprite_atlas.png'); background-repeat: no-repeat; background-position: ${x}px ${y}px; overflow: hidden`
+            elem.style.cssText = `width: ${width}px; height: ${height}px; background-image: url('sprite_atlas.png'); background-repeat: no-repeat; background-position: ${x}px ${y}px; overflow: hidden`
             document.body.appendChild(elem)
         })
     } catch (error) {
