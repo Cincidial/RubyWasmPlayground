@@ -6,3 +6,9 @@ Layout/IndentationWidth:
 
 Layout/EmptyLinesAroundBlockBody:
     EnforcedStyle: no_empty_lines
+
+Style/AccessorGrouping:
+    Enabled: false
+
+Naming/MethodParameterName:
+    MinNameLength: 1

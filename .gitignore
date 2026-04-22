@@ -1,1 +1,2 @@
-build_temp/
+build/build_temp/
+build/vendor/

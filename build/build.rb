@@ -41,12 +41,13 @@ atlas_files_hash.each do |k, file_list|
         x += width
         max_y = [max_y, height].max
 
-        if x >= 8192 # May need to set the pixel limit based on the build machine
-            x = 0
-            y += max_y
-            max_y = 0
-            atlas_rows.push([])
-        end
+        # May need to set the pixel limit based on the build machine
+        next if x < 8192
+
+        x = 0
+        y += max_y
+        max_y = 0
+        atlas_rows.push([])
     end
 end
 File.write('build_temp/atlas_metadata.json', JSON.pretty_generate(atlas_meta_hash))

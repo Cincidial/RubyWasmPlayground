@@ -66,3 +66,10 @@
             - Perform file specific stuff (image processing, pbs processing, etc)
             - Add the file+hash to cache
             - Serve the file
+
+# Up Next
+- Figure out how to use the parsed rxdata? 
+    - What's important
+    - Item locations is a good start for something that's possible with it
+- Parse PBS data into a JSON object
+- ??
