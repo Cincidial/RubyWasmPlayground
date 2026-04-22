@@ -32,13 +32,4 @@ async function getBuildData() {
 
 document.addEventListener('DOMContentLoaded', () => {
     getBuildData()
-
-    window.addEventListener('keydown', (event) => {
-        console.log(`Key pressed: ${event.key}`)
-        console.log(test)
-        mycallback('called the callback')
-
-        if (event.key == 'r') {
-        }
-    })
 })

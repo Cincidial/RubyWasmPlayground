@@ -59,5 +59,6 @@ atlas_rows.each_with_index do |row, i|
     `convert #{i.zero? ? '' : atlas_file_path} #{atlas_temp_row_file_path} -background none -append #{atlas_file_path}`
 end
 
+# Process seralized ruby data
 
 # `rm -r build_temp`
