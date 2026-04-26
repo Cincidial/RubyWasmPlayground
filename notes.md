@@ -68,8 +68,13 @@
             - Serve the file
 
 # Up Next
+- Start displaying some stuff
+    - Figure out how to front end (plain JS is okay, but maybe hard for others to work with as well)
+    - Build should combine all js/css into one file that gets pulled down
 - Figure out how to use the parsed rxdata? 
     - What's important
     - Item locations is a good start for something that's possible with it
 - Parse PBS data into a JSON object
+- Use a font from the game data
+- For each git hash to processes, checkout the hash. Alternativly, make a guide on how to set this up via forking, then each dev can have their own dev branch with hash to checkout. Save on build time
 - ??

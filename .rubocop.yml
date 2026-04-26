@@ -12,3 +12,9 @@ Style/AccessorGrouping:
 
 Naming/MethodParameterName:
     MinNameLength: 1
+
+Style/For:
+    Enabled: false
+
+Metrics/BlockLength:
+    Max: 100
