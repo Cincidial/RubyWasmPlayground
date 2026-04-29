@@ -1,0 +1,53 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+
+            - name: Set up Ruby
+              uses: ruby/setup-ruby@v1
+              with:
+                  ruby-version: '3.2.3'
+                  bundler-cache: true
+
+            - name: Install ImageMagick
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y imagemagick
+
+            - name: Run build scripts
+              run: |
+                  cd build
+                  bundle exec ruby build_data.rb
+                  bundle exec ruby build_src.rb
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: ./build/artifacts
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
