@@ -39,7 +39,7 @@ Eidolon.build('RGSS') do
         if filename[-3..].to_i.positive? # This is a MapXYZ.rxdata file
             map_id = filename[-3..].to_i
 
-            parsed = { name: 'placeholder', items: [], tiles: [], tileset: file_data.tileset_id }
+            parsed = { name: 'placeholder', items: [], tiles: [], tileset: file_data.tileset_id, width: file_data.width, height: file_data.height }
             used_tiles[file_data.tileset_id] ||= {}
 
             file_data.events.each_value do |event|
@@ -104,10 +104,9 @@ used_tiles.each do |tileset_key, v|
 
     atlas_meta_hash[tileset_key] = { common_width: 32, common_height: 32, atlas_name: tileset_atlas_artifact_name }
     v.each_key do |k|
-        next if k.zero? # Zero means transparent. TODO: should this skip?
-
-        x = ((k % tile_count_per_row) * tile_width_height) + x_offset
-        y = (k / tile_count_per_row) * tile_width_height
+        k_calc = k - 384 # 0-384 is auto tile and needs to be treated differently
+        x = ((k_calc % tile_count_per_row) * tile_width_height) + x_offset
+        y = (k_calc / tile_count_per_row) * tile_width_height
         atlas_meta_hash[tileset_key][k] = { x: x, y: y }
     end
 
@@ -143,7 +142,7 @@ atlas_files_hash.each do |k, file_list|
         width = dimens_hash[filename][:width]
         height = dimens_hash[filename][:height]
 
-        atlas_meta_hash[k][filename] = atlas_meta_hash[k].key?(:common_width) ? { x: x, y: y } : { x: x, y: y, width: width, height: height }
+        atlas_meta_hash[k][filename] = atlas_meta_hash[k].key?(:common_width) ? { x: x, y: y } : { x: x, y: y, w: width, h: height }
         atlas_rows.last.push(path)
         x += width
         max_y = [max_y, height].max
