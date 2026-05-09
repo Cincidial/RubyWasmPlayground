@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 var build_data
+var sprite_atlas_img
+var overworld_atlas_meta
 var tile_atlas_img
+
 async function getBuildData() {
     try {
         const response = await fetch('build_data.json')
@@ -27,7 +30,11 @@ async function getBuildData() {
         tile_atlas_img.onload = () => {
             document.body.appendChild(getSearch(Object.keys(build_data.map_data).map((m) => ({ k: m, v: build_data.map_data[m].name }))))
         }
-        tile_atlas_img.src = build_data.atlas_meta[24].atlas_name
+        tile_atlas_img.src = 'tileset_atlas.png'
+
+        sprite_atlas_img = new Image()
+        overworld_atlas_meta = build_data.atlas_meta['overworld']
+        sprite_atlas_img.src = 'sprite_atlas.png'
     } catch (error) {
         console.error(error.message)
     }

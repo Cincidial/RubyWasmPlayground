@@ -8,7 +8,7 @@ function getAtlasImg(x, y, w, h, filename) {
 
 function getPokemonIconImg(id) {
     const w = build_data.atlas_meta.icon.common_width
-    const h = build_data.atlas_meta.icon.common_height
+    const h = build_data.atlas_meta.icon.h
     const data = build_data.atlas_meta.icon[id]
     return getAtlasImg(data.x, data.y, w, h, build_data.atlas_meta.icon.atlas_name)
 }
