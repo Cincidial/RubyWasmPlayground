@@ -11,10 +11,10 @@ function getSearch(kvs) {
         }
 
         const selectedValue = event.target.value
-        const canvas = getRpgMapCanvas(selectedValue)
+        const rpgMap = getRpgMap(selectedValue)
 
-        setElement = canvas.children[0]
-        document.body.appendChild(canvas)
+        setElement = rpgMap.node.children[0]
+        document.body.appendChild(rpgMap.node)
     })
 
     return node

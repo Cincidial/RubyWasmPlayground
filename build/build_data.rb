@@ -3,7 +3,7 @@
 require 'json'
 require 'pp'
 require 'eidolon'
-run_img_cmds = true
+run_img_cmds = false
 
 magick_config = 'MAGICK_CONFIGURE_PATH="image_magick_config/"'
 `mkdir -p build_temp`
@@ -67,7 +67,7 @@ Eidolon.build('RGSS') do
 
         if filename[-3..].to_i.positive? # This is a MapXYZ.rxdata file
             map_id = filename[-3..].to_i
-            parsed = {
+            parsed_map = {
                 name: 'placeholder',
                 events: {}, # Key = x + (y * width). All entries have a 'type' member, indicating the type of event. Each entry here is a list
                 tiles: [],
@@ -78,54 +78,79 @@ Eidolon.build('RGSS') do
             used_tiles[file_data.tileset_id] ||= {}
 
             file_data.events.each_value do |event|
-                coordinate_key = event.x + (event.y * parsed[:width])
-                parsed[:events][coordinate_key] ||= []
+                coordinate_key = event.x + (event.y * parsed_map[:width])
+                has_processed_name = false
 
                 event.pages.each do |page|
-                    event_cmd = {
+                    parsed_event = parsed_map[:events][coordinate_key] ||= {
                         tile_id_graphic: page.graphic.tile_id, # When this is 0 the overworld graphic should be used, otherwise use the tile
                         overworld: page.graphic.character_name,
-                        direction: page.graphic.direction # 2 => South, 4 => West, 6 => East, 8 => North
+                        direction: page.graphic.direction, # 2 => South, 4 => West, 6 => East, 8 => North
+                        cmds: []
                     }
 
+                    if !has_processed_name && event.name.include?('resetfollower') # I think this means "use the overworld sprite of the trainers first mon"
+                        func_params = event.name[/\((.*?)\)/, 1] || '' # For example resetfollower(:LINEBACKER,\"Josh\").
+                        func_params_split = func_params.split(',') || ''
+
+                        if func_params_split.length >= 2
+                            parsed_cmd = {}
+                            parsed_cmd[:type] = 'trainer_follower_mon'
+                            parsed_cmd[:trainer_type] = func_params_split[0][1..] # The id in the param starts with ':'
+                            parsed_cmd[:trainer_name] = func_params_split[1][/"(.*?)"/, 1]
+
+                            parsed_event[:cmds].push(parsed_cmd) if parsed_cmd[:type]
+                            has_processed_name = true
+                        end
+                    end
+
                     page.list.each do |cmd|
+                        parsed_cmd = {}
                         cmd.parameters.each do |param|
                             next unless param.is_a?(String)
 
-                            if param.include?('pbItemBall') || param.include?('pbReceiveItem')
+                            type_item = param.include?('pbItemBall') ? 'item' : nil
+                            type_item_gift = param.include?('pbReceiveItem') ? 'item_gift' : nil
+                            type_berry = param.include?('pbPickBerry') ? 'berry' : nil
+
+                            if type_item || type_item_gift || type_berry
                                 func_params = param[/\((.*?)\)/, 1] # For example pbItemBall(:HYPERPOTION,1)
                                 func_params_split = func_params.split(',')
 
-                                event_cmd[:type] = 'item'
-                                event_cmd[:id] = func_params_split[0][1..] # The id in the param starts with ':'
-                                event_cmd[:count] = func_params_split.length > 1 ? func_params_split[1].to_i : 1 # Parse the count or assume 1 if it's not there
-                                event_cmd[:is_gift] = param.include?('pbReceiveItem')
+                                parsed_cmd[:type] = type_item || type_item_gift || type_berry
+                                parsed_cmd[:id] = func_params_split[0][1..] # The id in the param starts with ':'
+                                parsed_cmd[:count] = func_params_split.length > 1 ? func_params_split[1].to_i : 1 # Parse the count or assume 1 if it's not there
                             elsif param.include?('pbTrainerBattle')
                                 func_params = param[/\((.*?)\)/, 1] # For example pbTrainerBattle(:LINEBACKER,\"Josh\"),
                                 func_params_split = func_params.split(',')
 
-                                event_cmd[:type] = 'trainer'
-                                event_cmd[:trainer_type] = func_params_split[0][1..] # The id in the param starts with ':'
-                                event_cmd[:trainer_name] = func_params_split[1][/"(.*?)"/, 1]
+                                parsed_cmd[:type] = 'trainer'
+                                parsed_cmd[:trainer_type] = func_params_split[0][1..] # The id in the param starts with ':'
+                                parsed_cmd[:trainer_name] = func_params_split[1][/"(.*?)"/, 1]
+                            elsif param.include?('introduceAvatar')
+                                func_params = param[/\((.*?)\)/, 1] # For example introduceAvatar(:LEDIAN),
+
+                                parsed_cmd[:type] = 'avatar'
+                                parsed_cmd[:mon] = func_params[1..] # The id in the param starts with ':'
                             elsif param.include?('mapTransitionTransfer')
                                 func_params = param[/\((.*?)\)/, 1] # For example, mapTransitionTransfer(185,9,22)
                                 new_map_id, x, y = func_params.split(',')
 
-                                event_cmd[:type] = 'map'
-                                event_cmd[:id] = new_map_id
-                                event_cmd[:x] = x
-                                event_cmd[:y] = y
-                            elsif event_cmd[:overworld] != '' # This should mean it's just an NPC to talk to
-                                event_cmd[:type] = 'NPC'
+                                parsed_cmd[:type] = 'map'
+                                parsed_cmd[:id] = new_map_id
+                                parsed_cmd[:x] = x
+                                parsed_cmd[:y] = y
+                            elsif param.include?('pbRockSmashDynamite')
+                                parsed_cmd[:type] = 'explodeRock'
                             end
+
+                            parsed_event[:cmds].push(parsed_cmd) if parsed_cmd[:type]
                         end
                     end
-
-                    parsed[:events][coordinate_key].push(event_cmd) if event_cmd[:type]
                 end
             end
             for y in 0...file_data.height
-                parsed[:tiles].push([])
+                parsed_map[:tiles].push([])
                 for x in 0...file_data.width
                     bottom_layer = file_data.data[x, y, 0]
                     middle_layer = file_data.data[x, y, 1]
@@ -138,10 +163,10 @@ Eidolon.build('RGSS') do
                     layers_key = [bottom_layer, middle_layer, top_layer].join(',')
                     tile_layers_freq[layers_key] ||= 0
                     tile_layers_freq[layers_key] += 1
-                    parsed[:tiles].last.push(layers_key)
+                    parsed_map[:tiles].last.push(layers_key)
                 end
             end
-            map_data[map_id] = parsed
+            map_data[map_id] = parsed_map
         elsif filename == 'MapInfos'
             map_infos_file = file_data
         elsif filename == 'Tilesets'

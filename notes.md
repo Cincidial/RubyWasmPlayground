@@ -86,6 +86,9 @@ Trainers:
     - IGNORE: 
         ^ Events with resetfollower in their name
 
+Avatars: (this is tectonic specific, but still fun to have in to show what's possible)
+    - introduceAvatar
+
 Items: 
     - defeatBoss // Seems to be avatars only
     ^ pbItemBall

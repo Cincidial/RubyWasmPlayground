@@ -25,7 +25,7 @@ async function getBuildData() {
             })
         })
 
-        // TODO: This needs to be cleaned up
+        // TODO: Add a loading icon that goes away when both atlas have finished
         tile_atlas_img = new Image()
         tile_atlas_img.onload = () => {
             document.body.appendChild(getSearch(Object.keys(build_data.map_data).map((m) => ({ k: m, v: build_data.map_data[m].name }))))
