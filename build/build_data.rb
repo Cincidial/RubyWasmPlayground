@@ -3,7 +3,7 @@
 require 'json'
 require 'pp'
 require 'eidolon'
-run_img_cmds = true
+run_img_cmds = false
 
 magick_config = 'MAGICK_CONFIGURE_PATH="image_magick_config/"'
 `mkdir -p build_temp`
@@ -101,7 +101,7 @@ Eidolon.build('RGSS') do
                             trainer_extra = func_params_split.length >= 3 ? func_params_split[2] : nil
 
                             parsed_cmd[:k] = "#{trainer_type},#{trainer_name}"
-                            parsed_cmd[:k] += ",#{trainer_extra}" if trainer_extra
+                            parsed_cmd[:k] += ",#{trainer_extra}" if trainer_extra and trainer_extra != '0' # TAG: Might be wrong to ignore 0?. Also doubles need 2nd mon somehow
 
                             parsed_event[:cmds].push(parsed_cmd)
                             has_processed_name = true

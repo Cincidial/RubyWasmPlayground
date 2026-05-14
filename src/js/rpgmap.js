@@ -79,7 +79,8 @@ function getRpgMap(id) {
                     dst_y_offset = -64
                     break
                 } else if (cmd.type == 'trainer_follower_mon') {
-                    event_draw_data = overworld_atlas_meta[build_data.pbs.trainers[cmd.k].pokemon[0].k]
+                    const mon_key = build_data.pbs.trainers[cmd.k]?.pokemon[0]?.k
+                    event_draw_data = overworld_atlas_meta[mon_key] ?? event_draw_data
                     break
                 }
             }
