@@ -45,7 +45,7 @@ function getRpgMap(id) {
     Object.keys(map.events ?? {}).forEach((coordinate_key) => {
         const event = map.events[coordinate_key]
         const overworld = event.overworld.replaceAll('Followers/', '').replaceAll('Followers shiny', '')
-        const event_draw_data = event.tile_id_graphic != 0 ? atlas[event.tile_id_graphic] : overworld_atlas_meta[overworld] ? overworld_atlas_meta[overworld] : null
+        let event_draw_data = event.tile_id_graphic != 0 ? atlas[event.tile_id_graphic] : overworld_atlas_meta[overworld] ? overworld_atlas_meta[overworld] : null
 
         if (event_draw_data) {
             const dst_x = (coordinate_key % map.width) * tw
@@ -77,6 +77,9 @@ function getRpgMap(id) {
                     dst_h = 128
                     dst_x_offset = -32
                     dst_y_offset = -64
+                    break
+                } else if (cmd.type == 'trainer_follower_mon') {
+                    event_draw_data = overworld_atlas_meta[build_data.pbs.trainers[cmd.k].pokemon[0].k]
                     break
                 }
             }

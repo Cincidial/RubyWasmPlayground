@@ -93,7 +93,7 @@ Items:
     - defeatBoss // Seems to be avatars only
     ^ pbItemBall
     ^ pbReceiveItem
-    - pbPickBerry
+    ^ pbPickBerry
 
  ^ Encounter tiles:
     - Use terrarin tags along side the mappings in this file (will need manual updates for Eon Park) to map from terrain tag to encounter type 

@@ -3,7 +3,7 @@
 require 'json'
 require 'pp'
 require 'eidolon'
-run_img_cmds = false
+run_img_cmds = true
 
 magick_config = 'MAGICK_CONFIGURE_PATH="image_magick_config/"'
 `mkdir -p build_temp`
@@ -96,10 +96,14 @@ Eidolon.build('RGSS') do
                         if func_params_split.length >= 2
                             parsed_cmd = {}
                             parsed_cmd[:type] = 'trainer_follower_mon'
-                            parsed_cmd[:trainer_type] = func_params_split[0][1..] # The id in the param starts with ':'
-                            parsed_cmd[:trainer_name] = func_params_split[1][/"(.*?)"/, 1]
+                            trainer_type = func_params_split[0][1..] # The id in the param starts with ':'
+                            trainer_name = func_params_split[1][/"(.*?)"/, 1]
+                            trainer_extra = func_params_split.length >= 3 ? func_params_split[2] : nil
 
-                            parsed_event[:cmds].push(parsed_cmd) if parsed_cmd[:type]
+                            parsed_cmd[:k] = "#{trainer_type},#{trainer_name}"
+                            parsed_cmd[:k] += ",#{trainer_extra}" if trainer_extra
+
+                            parsed_event[:cmds].push(parsed_cmd)
                             has_processed_name = true
                         end
                     end
@@ -125,8 +129,12 @@ Eidolon.build('RGSS') do
                                 func_params_split = func_params.split(',')
 
                                 parsed_cmd[:type] = 'trainer'
-                                parsed_cmd[:trainer_type] = func_params_split[0][1..] # The id in the param starts with ':'
-                                parsed_cmd[:trainer_name] = func_params_split[1][/"(.*?)"/, 1]
+                                trainer_type = func_params_split[0][1..] # The id in the param starts with ':'
+                                trainer_name = func_params_split[1][/"(.*?)"/, 1]
+                                trainer_extra = func_params_split.length >= 3 ? func_params_split[2] : nil
+
+                                parsed_cmd[:k] = "#{trainer_type},#{trainer_name}"
+                                parsed_cmd[:k] += ",#{trainer_extra}" if trainer_extra
                             elsif param.include?('introduceAvatar')
                                 func_params = param[/\((.*?)\)/, 1] # For example introduceAvatar(:LEDIAN),
 
@@ -312,6 +320,57 @@ map_data.each_value do |v|
 end
 
 ############# Parse PBS data
+def parse_bracket_entries_file_to_entry_with_lines(filename, kv_split_delim = '=')
+    entry = nil
+    File.readlines("build_temp/game_data/PBS/#{filename}.txt", mode: "r:BOM|UTF-8").each do |line|
+        line = line.split('#')[0].strip
+        next if line.empty?
+
+        if line.start_with?('[')
+            yield(entry) unless entry.nil?
+            entry = { id: line[/\[(.*?)\]/, 1], lines: [] }
+        else
+            puts line if entry.nil?
+            entry[:lines].push(line)
+        end
+    end
+    yield(entry) unless entry.nil?
+end
+
+trainers = {}
+parse_bracket_entries_file_to_entry_with_lines('trainers') do |entry|
+    type, name, extra = entry[:id].split(',').map(&:strip)
+    trainer = { t: type, n: name, pokemon: [] }
+    trainer[:extra] = extra if extra
+
+    entry[:lines].each do |line|
+        k, v = line.split('=').map(&:strip)
+        if k == 'Pokemon'
+            mon, lvl = v.split(',').map(&:strip)
+            trainer[:pokemon].push({ k: mon, lvl: lvl.to_i })
+        elsif k == 'Form'
+            trainer[:pokemon].last[:form] = v.to_i
+        elsif k == 'Moves'
+            trainer[:pokemon].last[:moves] = v.split(',').map(&:strip)
+        elsif k == 'AbilityIndex'
+            trainer[:pokemon].last[:ability] = v.to_i
+        elsif k == 'Item'
+            trainer[:pokemon].last[:item] = v
+        elsif k == 'ItemType'
+            trainer[:pokemon].last[:item_type] = v
+        elsif k == 'Gender'
+            trainer[:pokemon].last[:gender] = v
+        elsif k == 'Name'
+            trainer[:pokemon].last[:nickname] = v
+        elsif k == 'EV'
+            trainer[:pokemon].last[:ev] = v.split(',').map(&:strip).map(&:to_i)
+        else
+            trainer[k] = v
+        end
+    end
+
+    trainers[entry[:id]] = trainer
+end
 
 ############# Write atlas and other processed data
 processed_data = {
@@ -319,7 +378,10 @@ processed_data = {
     map_data: map_data,
     map_huffman_mapping: tile_new_key_mappings.invert,
     tile_tag_data: tile_data,
-    encounter_tile_tag_mapping: encounter_tile_terrain_mapping
+    encounter_tile_tag_mapping: encounter_tile_terrain_mapping,
+    pbs: {
+        trainers: trainers,
+    }
 }
 File.write(json_file_path, JSON.generate(processed_data))
 
