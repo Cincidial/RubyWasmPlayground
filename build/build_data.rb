@@ -3,7 +3,7 @@
 require 'json'
 require 'pp'
 require 'eidolon'
-run_img_cmds = false
+run_img_cmds = true
 
 magick_config = 'MAGICK_CONFIGURE_PATH="image_magick_config/"'
 `mkdir -p build_temp`
